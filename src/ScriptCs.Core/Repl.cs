@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
-using System.Security.Cryptography.X509Certificates;
 using Common.Logging;
 using ScriptCs.Contracts;
 
@@ -33,9 +31,22 @@ namespace ScriptCs
 
             _commands = new Dictionary<string, Func<ScriptResult>>
             {
-                { "clear", () => { Console.Clear(); return new ScriptResult(); }},
-                { "reset", () => { Reset(); return new ScriptResult(); }},
-                { "exit", () => { Terminate(); return null; }}
+                { "clear", () =>
+                {
+                    Console.Clear(); 
+                    return new ScriptResult();
+                }},
+                { "reset", () =>
+                {
+                    Reset(); 
+                    return new ScriptResult();
+                }},
+                { "exit", () =>
+                {
+                    Terminate(); 
+                    Environment.Exit(0); 
+                    return null;
+                }}
             };
         }
 
