@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Security.Cryptography.X509Certificates;
 using Common.Logging;
 using ScriptCs.Contracts;
 
@@ -11,6 +15,8 @@ namespace ScriptCs
         private readonly string[] _scriptArgs;
 
         private readonly IObjectSerializer _serializer;
+
+        private readonly IDictionary<string, Func<ScriptResult>> _commands;
 
         public Repl(
             string[] scriptArgs,
@@ -24,6 +30,13 @@ namespace ScriptCs
             _scriptArgs = scriptArgs;
             _serializer = serializer;
             Console = console;
+
+            _commands = new Dictionary<string, Func<ScriptResult>>
+            {
+                { "clear", () => { Console.Clear(); return new ScriptResult(); }},
+                { "reset", () => { Reset(); return new ScriptResult(); }},
+                { "exit", () => { Terminate(); return null; }}
+            };
         }
 
         public string Buffer { get; set; }
@@ -43,16 +56,11 @@ namespace ScriptCs
 
             try
             {
-                if (script.StartsWith("#clear", StringComparison.OrdinalIgnoreCase))
+                if (script.StartsWith("#", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.Clear();
-                    return new ScriptResult();
-                }
-
-                if (script.StartsWith("#reset"))
-                {
-                    Reset();
-                    return new ScriptResult();
+                    var command = new string(script.Skip(1).TakeWhile(c => c != ' ').ToArray());
+                    if (!string.IsNullOrEmpty(command) && _commands.ContainsKey(command))
+                        return _commands[command]();
                 }
 
                 var preProcessResult = FilePreProcessor.ProcessScript(script);
